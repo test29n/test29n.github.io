@@ -73,7 +73,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
   <h1>¿Con quién coincides el 29N?</h1>
   <p>40 tarjetas, unos 10 minutos. <b>Desliza a la derecha</b> si estás de acuerdo y <b>a la izquierda</b> si no. Si no entiendes algo, toca «¿Qué significa?».</p>
   <p class="small">Lo que propone cada partido (PP, PSOE, Vox, Se Acabó La Fiesta, ERC, Junts y Frente Amplio) sale de sus programas para las generales del 29 de noviembre de 2026, según los resúmenes publicados por la prensa. No te dice a quién votar: solo en qué coincides.</p>
-  <p class="small">Tus respuestas se quedan en tu móvil y no se envían a nadie. Solo contamos de forma anónima cuántas personas empiezan y terminan el test, sin saber quién.</p>
+  <p class="small">Tus respuestas se quedan en tu móvil y no se envían a nadie. Solo contamos de forma anónima cuántas personas empiezan y terminan el test y con qué partido le sale a cada una, sin saber de quién es.</p>
   <button class="go" id="start">Empezar</button>
  </section>
  <section id="play" class="hidden" style="display:flex;flex-direction:column;flex:1">
@@ -209,7 +209,7 @@ try{const s=JSON.parse(localStorage.getItem(K)||"{}");if(Array.isArray(s.A)){A=s
 const save=()=>{try{localStorage.setItem(K,JSON.stringify({A,cur}))}catch(e){}};
 const $=id=>document.getElementById(id);
 /* contador anónimo: una vez por navegador */
-function gc(path,title){try{const f="gc-"+path;if(localStorage.getItem(f))return;const go=()=>{if(window.goatcounter&&window.goatcounter.count){window.goatcounter.count({path,title,event:true});try{localStorage.setItem(f,"1")}catch(e){}return true}};if(!go()){let n=0;const t=setInterval(()=>{if(go()||++n>20)clearInterval(t)},500)}}catch(e){}}
+function gc(path,title,flag){try{const f="gc-"+(flag||path);if(localStorage.getItem(f))return;const go=()=>{if(window.goatcounter&&window.goatcounter.count){window.goatcounter.count({path,title,event:true});try{localStorage.setItem(f,"1")}catch(e){}return true}};if(!go()){let n=0;const t=setInterval(()=>{if(go()||++n>20)clearInterval(t)},500)}}catch(e){}}
 if(GC_CODE&&!GC_CODE.startsWith("__")){const s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";s.dataset.goatcounter="https://"+GC_CODE+".goatcounter.com/count";document.head.appendChild(s)}
 function cardHTML(d,i){return `<div class="tag"><span class="kind">${d.fr?"Si escuchas esta frase…":"Pregunta"}</span><span>${B[d.b]} · ${i+1}/${N}</span></div>
 <p class="q ${d.fr?"frase":""}">${d.q}</p>
@@ -240,11 +240,12 @@ function score(){return P.map(([k,n])=>{let m=0,t=0;D.forEach((d,i)=>{const p=d.
 function link(){return location.origin.startsWith("http")?location.origin+location.pathname:""}
 function finish(){gc("test-terminado","Test terminado");
 $("play").classList.add("hidden");const r=$("res");r.classList.remove("hidden");const s=score(),best=s[0],url=link();
+if(best.p!==null)gc("resultado-"+best.n.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),"Resultado: coincide más con "+best.n,"resultado");
 const msg="He hecho el test del 29N y coincido un "+(best.p??0)+" % con "+best.n+".\n"+s.map(x=>"· "+x.n+": "+(x.p===null?"sin datos":x.p+" %")).join("\n")+"\n\n¿Y tú con quién coincides? Hazlo aquí (10 min):"+(url?"\n"+url:"");
 r.innerHTML=`<h1>Tu resultado</h1>
 <div class="top1"><span class="small">Con quien más coincides</span><strong>${best.n}</strong><span>${best.p??0} % de coincidencia</span></div>
 ${s.map(x=>`<div class="row"><span>${x.n}</span><div class="t"><i style="width:${x.p??0}%"></i></div><span>${x.p===null?"—":x.p+" %"}</span></div>${x.t<5?`<p class="small">Pocos datos de este partido (${x.t} tarjetas): tómatelo con calma.</p>`:""}`).join("")}
-<p class="small" style="margin-top:12px">Solo cuentan las tarjetas en las que ese partido tiene una postura clara y tú no has dicho «No lo sé». No es una recomendación de voto: Se Acabó La Fiesta no tiene un programa completo publicado, y los programas son promesas que dependen de pactos.</p>
+<p class="small" style="margin-top:12px">Para las estadísticas se guarda de forma anónima solo con qué partido te ha salido, sin tus respuestas ni quién eres. Solo cuentan las tarjetas en las que ese partido tiene una postura clara y tú no has dicho «No lo sé». No es una recomendación de voto: Se Acabó La Fiesta no tiene un programa completo publicado, y los programas son promesas que dependen de pactos.</p>
 <a class="go" id="wa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Compártelo por WhatsApp</a>
 <button class="go ghost" id="cp">Copiar el mensaje</button>
 <button class="go ghost" id="again">Volver a empezar</button>`;
